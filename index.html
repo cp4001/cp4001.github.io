@@ -1,430 +1,576 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>정준회 - AutoCAD & Revit API 전문개발자</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정준회 · AutoCAD & Revit API 개발자</title>
+<meta name="description" content="AutoCAD·BricsCAD·Revit 애드인 개발과 건축 적산 자동화 — 정준회">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F4; --sheet:#FBFCFB; --ink:#15212C; --ink-2:#4A5A66; --rule:#C9D3D3; --grid:#E2E8E7;
+  --cyan:#0B8796; --red:#C42F3A; --yellow:#E2B33A; --green:#3E8E4F; --magenta:#9B3E8C;
+  --sans:'IBM Plex Sans KR',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.65;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+@media (max-width:600px){.wrap{padding:0 16px}}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:rgba(242,245,244,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
+.brand{font-weight:700;text-decoration:none;letter-spacing:-.01em}
+.brand small{font-family:var(--mono);font-weight:400;color:var(--ink-2);margin-left:8px;font-size:12px}
+nav ul{display:flex;gap:22px;list-style:none;font-size:14px}
+nav ul a{text-decoration:none;color:var(--ink-2)}
+nav ul a:hover{color:var(--ink)}
+@media (max-width:760px){nav ul{display:none}.brand small{display:none}}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+/* hero sheet */
+.hero{padding:28px 0 56px}
+.sheet{position:relative;background:var(--sheet);border:1.5px solid var(--ink);box-shadow:0 0 0 6px var(--sheet),0 0 0 7px var(--rule);overflow:hidden;cursor:crosshair}
+.sheet-bg{position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;opacity:.7}
+.sheet-inner{position:relative;display:grid;grid-template-columns:1.15fr 1fr;min-height:560px}
+.hero-copy{padding:56px 48px 48px;display:flex;flex-direction:column;justify-content:space-between;gap:32px}
+.hero h1{font-size:clamp(2.2rem,4.6vw,3.9rem);line-height:1.08;font-weight:700;letter-spacing:-.035em}
+.hero h1 span{display:block;font-weight:300}
+.hero-lede{max-width:34em;color:var(--ink-2);font-size:1.06rem;margin-top:20px}
+.cmd{font-family:var(--mono);font-size:13px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:12px;min-height:2.6em}
+.cmd b{color:var(--ink);font-weight:500}
+.caret{display:inline-block;width:7px;height:14px;background:var(--ink);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.plan{position:relative;border-left:1px solid var(--rule)}
+.plan svg{width:100%;height:100%;display:block}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.6s cubic-bezier(.6,0,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fade{opacity:0;animation:fade .6s ease forwards}
+@keyframes fade{to{opacity:1}}
+.xhair{position:absolute;pointer-events:none;inset:0;opacity:0;transition:opacity .15s}
+.sheet:hover .xhair{opacity:1}
+.xhair i{position:absolute;background:var(--ink);opacity:.55}
+.xhair .h{left:0;right:0;height:1px}.xhair .v{top:0;bottom:0;width:1px}
+.xhair .box{position:absolute;width:10px;height:10px;border:1px solid var(--ink);transform:translate(-50%,-50%)}
+.coords{position:absolute;right:10px;top:8px;font-family:var(--mono);font-size:12px;color:var(--ink-2);background:var(--sheet);padding:2px 6px;border:1px solid var(--rule)}
+@media (hover:none){.xhair,.coords{display:none}.sheet{cursor:auto}}
 
-        header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 60px 40px;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
+/* title block */
+.tblock{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid var(--ink);position:relative;background:var(--sheet);font-size:14px}
+.tblock>div{padding:10px 14px;border-right:1px solid var(--rule)}
+.tblock>div:last-child{border-right:0}
+.tblock dt{font-size:11px;color:var(--ink-2)}
+.tblock dd{font-weight:500}
+.tblock a{text-decoration:none}.tblock a:hover{text-decoration:underline}
+@media (max-width:860px){
+  .sheet-inner{grid-template-columns:1fr}
+  .plan{border-left:0;border-top:1px solid var(--rule);height:320px}
+  .hero-copy{padding:36px 22px 28px}
+  .tblock{grid-template-columns:1fr 1fr}
+  .tblock>div:nth-child(2){border-right:0}
+  .tblock>div:nth-child(-n+2){border-bottom:1px solid var(--rule)}
+}
 
-        .profile-img {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            margin: 0 auto 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: white;
-            font-weight: bold;
-        }
+/* sections */
+section{padding:72px 0;border-top:1px solid var(--rule);scroll-margin-top:56px}
+.sec-head{display:grid;grid-template-columns:260px 1fr;gap:32px;margin-bottom:36px;align-items:end}
+.sec-head h2{font-size:1.9rem;letter-spacing:-.025em;line-height:1.2}
+.sec-head p{color:var(--ink-2);max-width:40em}
+@media (max-width:860px){.sec-head{grid-template-columns:1fr;gap:10px}}
 
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+/* layer table */
+.layers{width:100%;border-collapse:collapse;background:var(--sheet);border:1px solid var(--rule)}
+.layers th{font-size:12px;font-weight:500;color:var(--ink-2);text-align:left;padding:10px 16px;border-bottom:1px solid var(--rule);background:var(--paper)}
+.layers td{padding:20px 16px;border-bottom:1px solid var(--grid);vertical-align:top}
+.layers tr:last-child td{border-bottom:0}
+.sw{display:inline-block;width:14px;height:14px;border:1px solid var(--ink);vertical-align:-2px}
+.lname{font-family:var(--mono);font-size:14px;font-weight:500;white-space:nowrap}
+.layers td p{color:var(--ink-2);font-size:15px;max-width:46em}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tags span{font-size:12px;border:1px solid var(--rule);padding:1px 8px;border-radius:2px;color:var(--ink-2);background:var(--paper)}
+@media (max-width:700px){.layers .c-color{display:none}.layers td{padding:16px 12px}.lname{white-space:normal}}
 
-        .subtitle {
-            font-size: 1.3rem;
-            color: #666;
-            margin-bottom: 20px;
-        }
+/* simulator */
+.sim{background:var(--ink);color:#E7EDEE;border-top:0}
+.sim .sec-head p{color:#9FB0B8}
+.flow{display:flex;gap:0;margin-bottom:24px;border:1px solid #2E3E4B;width:max-content;max-width:100%}
+.flow button{font:inherit;font-size:14px;background:none;color:#9FB0B8;border:0;border-right:1px solid #2E3E4B;padding:10px 18px;cursor:pointer}
+.flow button:last-child{border-right:0}
+.flow button[aria-pressed=true]{background:#E7EDEE;color:var(--ink);font-weight:600}
+.sim-grid{display:grid;grid-template-columns:280px 1fr 360px;gap:0;border:1px solid #2E3E4B;background:#1A2834}
+.ctrl{padding:22px;border-right:1px solid #2E3E4B;display:flex;flex-direction:column;gap:18px}
+.ctrl label{display:block;font-size:13px;color:#9FB0B8}
+.ctrl output{float:right;font-family:var(--mono);color:#fff}
+.ctrl input[type=range]{width:100%;margin-top:8px;accent-color:var(--yellow)}
+.viewport{position:relative;min-height:420px;background:#202D38;background-image:linear-gradient(#26343F 1px,transparent 1px),linear-gradient(90deg,#26343F 1px,transparent 1px);background-size:20px 20px}
+.viewport svg{position:absolute;inset:0;width:100%;height:100%}
+.vp-label{position:absolute;left:12px;top:10px;font-family:var(--mono);font-size:12px;color:#9FB0B8}
+.qty{border-left:1px solid #2E3E4B;padding:22px;display:flex;flex-direction:column}
+.qty table{width:100%;border-collapse:collapse;font-size:14px}
+.qty th{font-weight:500;font-size:12px;color:#9FB0B8;text-align:right;padding:6px 4px;border-bottom:1px solid #2E3E4B}
+.qty th:first-child{text-align:left}
+.qty td{padding:9px 4px;border-bottom:1px solid #26343F;text-align:right;font-family:var(--mono);font-size:13px}
+.qty td:first-child{text-align:left;font-family:var(--sans);font-size:14px}
+.qty tbody tr{cursor:default;transition:background .15s}
+.qty tbody tr:hover,.qty tbody tr:focus{background:#24343F;outline:none}
+.qty tfoot td{font-weight:600;color:#fff;border-bottom:0;padding-top:12px}
+.dot{display:inline-block;width:9px;height:9px;margin-right:8px;vertical-align:1px}
+.note{margin-top:auto;padding-top:16px;font-size:12px;color:#7F929C;line-height:1.55}
+.qty h3{font-size:15px;margin-bottom:10px}
+@media (max-width:1060px){.sim-grid{grid-template-columns:1fr 1fr}.viewport{grid-column:1/-1;order:-1;min-height:340px}.ctrl{border-right:1px solid #2E3E4B;border-top:1px solid #2E3E4B}.qty{border-top:1px solid #2E3E4B}}
+@media (max-width:680px){.sim-grid{grid-template-columns:1fr}.ctrl,.qty{border-left:0;border-right:0}.flow button{padding:10px 12px}}
 
-        .contact-info {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
+/* projects */
+.filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.filter button{font:inherit;font-size:14px;padding:6px 14px;border:1px solid var(--rule);background:var(--sheet);cursor:pointer;color:var(--ink-2)}
+.filter button[aria-pressed=true]{border-color:var(--ink);color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--ink)}
+.plist{border:1px solid var(--rule);background:var(--sheet)}
+.proj{border-bottom:1px solid var(--grid)}
+.proj:last-child{border-bottom:0}
+.proj summary{list-style:none;display:grid;grid-template-columns:120px 1fr 200px 24px;gap:18px;align-items:center;padding:18px 20px;cursor:pointer}
+.proj summary::-webkit-details-marker{display:none}
+.proj summary:hover{background:var(--paper)}
+.plat{font-family:var(--mono);font-size:12px;display:flex;align-items:center;gap:8px;color:var(--ink-2)}
+.ptitle b{font-size:1.05rem;display:block;letter-spacing:-.01em}
+.ptitle span{color:var(--ink-2);font-size:14px}
+.pver{font-family:var(--mono);font-size:12px;color:var(--ink-2);text-align:right}
+.chev{width:12px;height:12px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:rotate(45deg);transition:transform .2s;justify-self:end;margin-top:-4px}
+.proj[open] .chev{transform:rotate(225deg);margin-top:4px}
+.pbody{padding:0 20px 22px calc(120px + 38px);display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.pbody ul{list-style:none;font-size:15px}
+.pbody li{padding:5px 0 5px 16px;position:relative;border-bottom:1px dashed var(--grid)}
+.pbody li::before{content:"";position:absolute;left:0;top:14px;width:7px;height:1.5px;background:var(--cyan)}
+.pbody code{font-family:var(--mono);font-size:12.5px;background:var(--paper);padding:0 5px;border:1px solid var(--grid)}
+.pbody .meta{font-size:14px;color:var(--ink-2)}
+.pbody .meta p+p{margin-top:8px}
+.pbody .meta a{color:var(--cyan)}
+@media (max-width:760px){
+  .proj summary{grid-template-columns:1fr 20px;gap:6px 12px;padding:16px}
+  .plat{grid-column:1}.ptitle{grid-column:1}.pver{grid-column:1;text-align:left}.chev{grid-row:1/4;grid-column:2;align-self:center}
+  .pbody{padding:0 16px 18px;grid-template-columns:1fr}
+}
 
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #555;
-            font-weight: 500;
-        }
+/* services */
+.svc{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);background:var(--sheet)}
+.svc>div{padding:24px 22px;border-right:1px solid var(--rule)}
+.svc>div:last-child{border-right:0}
+.svc h3{font-size:1.05rem;margin-bottom:10px}
+.svc ul{list-style:none;color:var(--ink-2);font-size:15px}
+.svc li{padding:3px 0}
+@media (max-width:900px){.svc{grid-template-columns:1fr 1fr}.svc>div:nth-child(2){border-right:0}.svc>div:nth-child(-n+2){border-bottom:1px solid var(--rule)}}
+@media (max-width:520px){.svc{grid-template-columns:1fr}.svc>div{border-right:0;border-bottom:1px solid var(--rule)}.svc>div:last-child{border-bottom:0}}
 
-        .section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
+/* contact */
+.contact{padding:88px 0 40px}
+.contact-box{border:1.5px solid var(--ink);background:var(--sheet);display:grid;grid-template-columns:1.4fr 1fr}
+.contact-box .l{padding:40px}
+.contact-box h2{font-size:clamp(1.8rem,3.6vw,2.6rem);letter-spacing:-.03em;line-height:1.15}
+.contact-box .l p{color:var(--ink-2);margin-top:14px;max-width:32em}
+.btn{display:inline-block;margin-top:26px;background:var(--ink);color:var(--sheet);text-decoration:none;padding:13px 22px;font-weight:600}
+.btn:hover{background:var(--cyan)}
+.contact-box dl{border-left:1px solid var(--rule)}
+.contact-box dl div{padding:18px 24px;border-bottom:1px solid var(--rule)}
+.contact-box dl div:last-child{border-bottom:0}
+.contact-box dt{font-size:12px;color:var(--ink-2)}
+.contact-box dd{font-weight:500;font-size:1.05rem}
+.contact-box dd a{text-decoration:none}.contact-box dd a:hover{color:var(--cyan)}
+@media (max-width:760px){.contact-box{grid-template-columns:1fr}.contact-box dl{border-left:0;border-top:1px solid var(--rule)}.contact-box .l{padding:28px 20px}}
+footer{padding:28px 0 40px;font-size:13px;color:var(--ink-2);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{color:var(--ink-2)}
 
-        .section h2 {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: #667eea;
-            text-align: center;
-            position: relative;
-        }
-
-        .section h2::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 2px;
-        }
-
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .skill-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .skill-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-
-        .skill-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            color: white;
-        }
-
-        .skill-card h3 {
-            font-size: 1.4rem;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .skill-card p {
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-
-        .service-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            border-left: 5px solid #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .service-card:hover {
-            transform: translateX(10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .service-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .service-card ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .service-card ul li {
-            padding: 8px 0;
-            color: #555;
-            position: relative;
-            padding-left: 25px;
-        }
-
-        .service-card ul li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .about-content {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            text-align: center;
-            color: #555;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .cta-section {
-            text-align: center;
-            padding: 50px 40px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 20px;
-            margin-top: 30px;
-        }
-
-        .cta-section h2 {
-            font-size: 2.2rem;
-            margin-bottom: 20px;
-        }
-
-        .cta-section p {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background: white;
-            color: #667eea;
-            padding: 15px 40px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 1.1rem;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            header {
-                padding: 40px 20px;
-            }
-            
-            h1 {
-                font-size: 2.2rem;
-            }
-            
-            .contact-info {
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-            }
-            
-            .section {
-                padding: 25px;
-            }
-            
-            .skills-grid,
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .draw{animation:none;stroke-dashoffset:0}.fade{animation:none;opacity:1}.caret{animation:none}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="profile-img">정</div>
-            <h1>정준회</h1>
-            <p class="subtitle">AutoCAD & Revit API 전문개발자</p>
-            <p class="subtitle">건축 적산 솔루션 전문가</p>
-            
-            <div class="contact-info">
-                <div class="contact-item">
-                    <span>📧</span>
-                    <span>cp4001@hanmail.net</span>
-                </div>
-                <div class="contact-item">
-                    <span>📱</span>
-                    <span>010-3764-0427</span>
-                </div>
-            </div>
-        </header>
 
-        <section class="section">
-            <h2>About Me</h2>
-            <div class="about-content">
-                <p>
-                    안녕하세요! 건축 분야의 디지털 혁신을 이끌어가는 <strong>AutoCAD & Revit API 전문개발자</strong> 정준회입니다.
-                    <br><br>
-                    특히 <strong>건축 적산 분야</strong>에 특화된 솔루션 개발을 통해 건축업계의 업무 효율성을 획기적으로 향상시키는 것이 저의 전문 영역입니다. 
-                    복잡한 건축 프로세스를 자동화하고, 정확한 물량 산출과 비용 계산을 위한 맞춤형 API를 개발합니다.
-                </p>
-            </div>
-        </section>
+<nav aria-label="주 메뉴">
+  <div class="wrap">
+    <a class="brand" href="#top">정준회<small>CAD·BIM API</small></a>
+    <ul>
+      <li><a href="#skills">전문 분야</a></li>
+      <li><a href="#sim">적산 시뮬레이터</a></li>
+      <li><a href="#projects">애드인</a></li>
+      <li><a href="#services">서비스</a></li>
+      <li><a href="#contact">문의</a></li>
+    </ul>
+  </div>
+</nav>
 
-        <section class="section">
-            <h2>전문 기술</h2>
-            <div class="skills-grid">
-                <div class="skill-card">
-                    <div class="skill-icon">🏗️</div>
-                    <h3>AutoCAD API</h3>
-                    <p>AutoLISP, .NET API, ObjectARX를 활용한 AutoCAD 플러그인 개발. 도면 자동화, 블록 관리, 레이어 제어 등 건축 설계 프로세스 최적화</p>
-                </div>
-                <div class="skill-card">
-                    <div class="skill-icon">🏢</div>
-                    <h3>Revit API</h3>
-                    <p>Revit Add-in 개발을 통한 BIM 자동화. 패밀리 생성, 파라미터 관리, 일정표 자동 생성 및 건축 정보 추출 솔루션</p>
-                </div>
-                <div class="skill-card">
-                    <div class="skill-icon">📊</div>
-                    <h3>건축 적산</h3>
-                    <p>정확한 물량 산출, 자재 계산, 공사비 견적을 위한 전문 알고리즘 개발. 실시간 적산 시스템 구축 및 보고서 자동 생성</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2>제공 서비스</h2>
-            <div class="services-grid">
-                <div class="service-card">
-                    <h3>🔧 맞춤형 API 개발</h3>
-                    <ul>
-                        <li>AutoCAD 플러그인 개발</li>
-                        <li>Revit Add-in 솔루션</li>
-                        <li>도면 자동화 도구</li>
-                        <li>BIM 데이터 추출 시스템</li>
-                    </ul>
-                </div>
-                <div class="service-card">
-                    <h3>📏 적산 솔루션</h3>
-                    <ul>
-                        <li>자동 물량 산출 시스템</li>
-                        <li>실시간 공사비 계산기</li>
-                        <li>자재 관리 프로그램</li>
-                        <li>견적서 자동 생성 도구</li>
-                    </ul>
-                </div>
-                <div class="service-card">
-                    <h3>⚙️ 시스템 통합</h3>
-                    <ul>
-                        <li>CAD-BIM 연동 솔루션</li>
-                        <li>기존 시스템 API 연계</li>
-                        <li>데이터베이스 통합</li>
-                        <li>클라우드 기반 솔루션</li>
-                    </ul>
-                </div>
-                <div class="service-card">
-                    <h3>🎓 기술 지원</h3>
-                    <ul>
-                        <li>API 개발 컨설팅</li>
-                        <li>기술 교육 및 트레이닝</li>
-                        <li>시스템 최적화</li>
-                        <li>유지보수 및 업그레이드</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <div class="cta-section">
-            <h2>프로젝트 문의</h2>
-            <p>건축 적산 분야의 혁신적인 솔루션이 필요하시나요?<br>언제든지 연락주세요!</p>
-            <a href="mailto:cp4001@hanmail.net" class="cta-button">프로젝트 상담하기</a>
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="sheet" id="sheet">
+      <div class="sheet-bg" aria-hidden="true"></div>
+      <div class="sheet-inner">
+        <div class="hero-copy">
+          <div>
+            <h1>도면을 읽고,<span>모델을 세고,</span>물량을 계산합니다.</h1>
+            <p class="hero-lede">AutoCAD·BricsCAD·Revit API로 설계와 적산 실무를 자동화하는 애드인을 만듭니다. 손으로 하던 반복 작업을 명령어 하나로 바꾸는 일이 제 전문입니다.</p>
+          </div>
+          <p class="cmd" aria-live="off"><span id="cmdText"></span><span class="caret" aria-hidden="true"></span></p>
         </div>
-
-        <footer>
-            <p>&copy; 2025 정준회. All rights reserved. | AutoCAD & Revit API Specialist</p>
-        </footer>
+        <div class="plan" aria-hidden="true">
+          <svg viewBox="0 0 460 420" preserveAspectRatio="xMidYMid meet" fill="none" stroke-linecap="square">
+            <!-- grid lines -->
+            <g stroke="#C42F3A" stroke-width=".8" stroke-dasharray="10 3 2 3" class="fade" style="animation-delay:.1s">
+              <line x1="70" y1="40" x2="70" y2="370"/><line x1="200" y1="40" x2="200" y2="370"/><line x1="330" y1="40" x2="330" y2="370"/>
+              <line x1="40" y1="90" x2="400" y2="90"/><line x1="40" y1="220" x2="400" y2="220"/><line x1="40" y1="330" x2="400" y2="330"/>
+            </g>
+            <g font-family="IBM Plex Mono" font-size="11" fill="#15212C" stroke="#15212C" stroke-width="1" class="fade" style="animation-delay:.3s">
+              <circle cx="70" cy="24" r="12" fill="#FBFCFB"/><circle cx="200" cy="24" r="12" fill="#FBFCFB"/><circle cx="330" cy="24" r="12" fill="#FBFCFB"/>
+              <circle cx="420" cy="90" r="12" fill="#FBFCFB"/><circle cx="420" cy="220" r="12" fill="#FBFCFB"/><circle cx="420" cy="330" r="12" fill="#FBFCFB"/>
+              <g stroke="none" text-anchor="middle"><text x="70" y="28">X1</text><text x="200" y="28">X2</text><text x="330" y="28">X3</text><text x="420" y="94">Y1</text><text x="420" y="224">Y2</text><text x="420" y="334">Y3</text></g>
+            </g>
+            <!-- walls -->
+            <g stroke="#15212C" stroke-width="2.2">
+              <path class="draw" pathLength="1" d="M70 90 H330 V330 H70 Z"/>
+              <path class="draw" pathLength="1" style="animation-delay:.15s" d="M78 98 H322 V322 H78 Z" stroke-width="1"/>
+              <path class="draw" pathLength="1" style="animation-delay:.35s" d="M200 98 V180 M200 210 V322 M78 220 H150 M180 220 H322" stroke-width="1.6"/>
+            </g>
+            <!-- columns -->
+            <g fill="#15212C" class="fade" style="animation-delay:1.1s">
+              <rect x="63" y="83" width="14" height="14"/><rect x="193" y="83" width="14" height="14"/><rect x="323" y="83" width="14" height="14"/>
+              <rect x="63" y="213" width="14" height="14"/><rect x="193" y="213" width="14" height="14"/><rect x="323" y="213" width="14" height="14"/>
+              <rect x="63" y="323" width="14" height="14"/><rect x="193" y="323" width="14" height="14"/><rect x="323" y="323" width="14" height="14"/>
+            </g>
+            <!-- doors -->
+            <g stroke="#15212C" stroke-width="1" class="fade" style="animation-delay:1.2s">
+              <path d="M200 180 L230 180 M200 180 A30 30 0 0 1 230 210" stroke-dasharray="2 2"/>
+              <path d="M150 220 L150 250 M150 220 A30 30 0 0 1 180 250" stroke-dasharray="2 2"/>
+            </g>
+            <!-- hatch: slab area -->
+            <g stroke="#0B8796" stroke-width=".7" opacity=".55" class="fade" style="animation-delay:1.4s">
+              <path d="M210 230 l40 -40 M210 260 l70 -70 M210 290 l100 -100 M220 310 l92 -92 M250 310 l62 -62 M280 310 l32 -32"/>
+            </g>
+            <!-- dimensions -->
+            <g stroke="#0B8796" stroke-width=".9" class="fade" style="animation-delay:1.5s">
+              <path d="M70 392 H330 M70 386 V398 M200 386 V398 M330 386 V398 M66 396 l8 -8 M196 396 l8 -8 M326 396 l8 -8"/>
+              <path d="M40 90 V330 M34 90 H46 M34 220 H46 M34 330 H46"/>
+            </g>
+            <g font-family="IBM Plex Mono" font-size="11" fill="#0B8796" text-anchor="middle" class="fade" style="animation-delay:1.6s">
+              <text x="135" y="388">8,400</text><text x="265" y="388">8,400</text>
+              <text transform="translate(32 155) rotate(-90)">8,400</text><text transform="translate(32 275) rotate(-90)">7,200</text>
+            </g>
+            <g font-family="IBM Plex Sans KR" font-size="12" fill="#4A5A66" class="fade" style="animation-delay:1.7s">
+              <text x="110" y="160">거실</text><text x="236" y="160">주방</text><text x="104" y="280">침실</text><text x="250" y="210" fill="#0B8796">SLAB t=210</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <dl class="tblock">
+        <div><dt>설계·개발</dt><dd>정준회</dd></div>
+        <div><dt>분야</dt><dd>AutoCAD · Revit API / 건축 적산</dd></div>
+        <div><dt>이메일</dt><dd><a href="mailto:cp4001@hanmail.net">cp4001@hanmail.net</a></dd></div>
+        <div><dt>전화</dt><dd><a href="tel:010-3764-0427">010-3764-0427</a></dd></div>
+      </dl>
+      <div class="xhair" id="xhair" aria-hidden="true"><i class="h"></i><i class="v"></i><span class="box"></span></div>
+      <span class="coords" id="coords" aria-hidden="true">X 0.00  Y 0.00</span>
     </div>
+  </div>
+</header>
 
-    <script>
-        // 부드러운 스크롤 애니메이션
-        document.addEventListener('DOMContentLoaded', function() {
-            const sections = document.querySelectorAll('.section, header');
-            
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-            
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
-            
-            sections.forEach(section => {
-                section.style.opacity = '0';
-                section.style.transform = 'translateY(30px)';
-                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(section);
-            });
-        });
+<main>
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>전문 분야</h2>
+      <p>CAD 도면 자동화부터 BIM 데이터 추출, 그리고 그 데이터로 물량을 뽑는 적산까지. 세 레이어가 겹치는 지점에서 일합니다.</p>
+    </div>
+    <table class="layers">
+      <thead><tr><th class="c-color">색상</th><th>레이어</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="c-color"><span class="sw" style="background:var(--red)"></span></td>
+          <td class="lname">A-CAD-API</td>
+          <td><p>AutoCAD·BricsCAD .NET API(C#)로 플러그인을 개발합니다. 명령어, 리본 UI, 블록·XData·Overrule, 도면 일괄 처리와 설치본 배포까지 전 과정을 다룹니다.</p>
+            <div class="tags"><span>AutoCAD .NET</span><span>BricsCAD</span><span>ObjectARX</span><span>AutoLISP</span><span>Bundle 배포</span></div></td>
+        </tr>
+        <tr>
+          <td class="c-color"><span class="sw" style="background:var(--cyan)"></span></td>
+          <td class="lname">A-BIM-REVIT</td>
+          <td><p>Revit API로 BIM 모델링과 정보 추출을 자동화합니다. 패밀리·파라미터 관리, 요소 생성, 일정표, 링크 모델 처리, 2023~2026 버전별 API 차이 대응.</p>
+            <div class="tags"><span>Revit API</span><span>IExternalCommand</span><span>FilteredElementCollector</span><span>Ribbon</span><span>.addin</span></div></td>
+        </tr>
+        <tr>
+          <td class="c-color"><span class="sw" style="background:var(--yellow)"></span></td>
+          <td class="lname">A-QTY-적산</td>
+          <td><p>도면과 모델에서 물량을 자동으로 산출합니다. 콘크리트·거푸집·철근 수량, 부재별 집계, 엑셀 보고서 생성까지 적산 실무에 맞춘 알고리즘을 만듭니다.</p>
+            <div class="tags"><span>물량 산출</span><span>부재 집계</span><span>Excel 출력</span><span>공사비 견적</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-        // 연락처 클릭 이벤트
-        document.addEventListener('DOMContentLoaded', function() {
-            const phoneElement = document.querySelector('.contact-item:nth-child(2)');
-            if (phoneElement) {
-                phoneElement.style.cursor = 'pointer';
-                phoneElement.addEventListener('click', function() {
-                    window.open('tel:010-3764-0427');
-                });
-            }
-        });
-    </script>
+<section class="sim" id="sim">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>모델에서 물량까지</h2>
+      <p>제가 만드는 애드인이 하는 일을 직접 조작해 보세요. 골조 조건을 바꾸면 모델이 다시 그려지고 물량이 즉시 계산됩니다. 표의 행에 마우스를 올리면 해당 부재가 모델에서 표시됩니다.</p>
+    </div>
+    <div class="flow" role="group" aria-label="보기 단계">
+      <button type="button" data-view="plan" aria-pressed="false">1. 도면 (2D)</button>
+      <button type="button" data-view="iso" aria-pressed="true">2. 모델 (BIM)</button>
+      <button type="button" data-view="qty" aria-pressed="false">3. 물량 강조</button>
+    </div>
+    <div class="sim-grid">
+      <form class="ctrl" id="ctrl" onsubmit="return false">
+        <label>층수 <output id="o-n"></output><input type="range" id="n" min="1" max="12" value="5"></label>
+        <label>X방향 스팬 수 <output id="o-nx"></output><input type="range" id="nx" min="1" max="6" value="4"></label>
+        <label>Y방향 스팬 수 <output id="o-ny"></output><input type="range" id="ny" min="1" max="4" value="2"></label>
+        <label>스팬 길이 <output id="o-L"></output><input type="range" id="L" min="6" max="10" step="0.3" value="8.4"></label>
+        <label>층고 <output id="o-H"></output><input type="range" id="H" min="3" max="5" step="0.1" value="3.6"></label>
+        <label>슬래브 두께 <output id="o-t"></output><input type="range" id="t" min="150" max="300" step="10" value="210"></label>
+      </form>
+      <div class="viewport">
+        <span class="vp-label" id="vpLabel">3D 뷰 · 남동 등각</span>
+        <svg id="model" role="img" aria-label="골조 모델 미리보기"></svg>
+      </div>
+      <div class="qty">
+        <h3>물량 집계표</h3>
+        <table>
+          <thead><tr><th>부재</th><th>콘크리트 m³</th><th>거푸집 m²</th><th>철근 ton</th></tr></thead>
+          <tbody id="qbody"></tbody>
+          <tfoot><tr id="qfoot"></tr></tfoot>
+        </table>
+        <p class="note">기둥 600×600, 보 400×700 기준의 개략 산식입니다. 실제 적산에서는 부재 상세, 접합부 공제, 할증률, 철근 배근 상세를 반영합니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>개발한 애드인</h2>
+      <p>실무에서 쓰기 위해 만들고, 버전을 올려 가며 유지하고 있는 프로젝트입니다. 행을 열면 주요 기능을 볼 수 있습니다.</p>
+    </div>
+    <div class="filter" role="group" aria-label="플랫폼 필터">
+      <button type="button" data-f="all" aria-pressed="true">전체</button>
+      <button type="button" data-f="AutoCAD" aria-pressed="false">AutoCAD</button>
+      <button type="button" data-f="BricsCAD" aria-pressed="false">BricsCAD</button>
+      <button type="button" data-f="Revit" aria-pressed="false">Revit</button>
+      <button type="button" data-f="Tool" aria-pressed="false">독립 도구</button>
+    </div>
+    <div class="plist" id="plist"></div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>제공 서비스</h2>
+      <p>필요한 기능 하나부터 사내 전용 툴셋까지, 규모에 맞춰 개발하고 설치본과 사용 설명까지 함께 드립니다.</p>
+    </div>
+    <div class="svc">
+      <div><h3>맞춤형 애드인 개발</h3><ul><li>AutoCAD·BricsCAD 플러그인</li><li>Revit 애드인</li><li>도면 자동화 도구</li><li>BIM 데이터 추출</li></ul></div>
+      <div><h3>적산 솔루션</h3><ul><li>자동 물량 산출</li><li>부재별 집계표</li><li>자재 관리 프로그램</li><li>견적서 자동 생성</li></ul></div>
+      <div><h3>시스템 연동</h3><ul><li>CAD–BIM 데이터 연계</li><li>기존 시스템 API 연동</li><li>데이터베이스 통합</li><li>클라우드 연동</li></ul></div>
+      <div><h3>기술 지원</h3><ul><li>API 개발 컨설팅</li><li>교육 및 트레이닝</li><li>버전 업그레이드 대응</li><li>유지보수</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="contact-box">
+      <div class="l">
+        <h2>반복되는 도면 작업이 있다면 알려주세요.</h2>
+        <p>지금 하고 계신 작업 순서를 설명해 주시면, 자동화할 수 있는 범위와 방법을 먼저 제안드립니다.</p>
+        <a class="btn" href="mailto:cp4001@hanmail.net?subject=애드인%20개발%20문의">메일로 문의하기</a>
+      </div>
+      <dl>
+        <div><dt>이메일</dt><dd><a href="mailto:cp4001@hanmail.net">cp4001@hanmail.net</a></dd></div>
+        <div><dt>전화</dt><dd><a href="tel:010-3764-0427">010-3764-0427</a></dd></div>
+        <div><dt>다루는 플랫폼</dt><dd>AutoCAD · BricsCAD · Revit</dd></div>
+      </dl>
+    </div>
+    <footer>
+      <span>&copy; 2026 정준회. AutoCAD & Revit API Specialist</span>
+      <a href="dwg-manager/">DWG Manager</a>
+    </footer>
+  </div>
+</section>
+</main>
+
+<script>
+/* ---------- hero: command line + crosshair ---------- */
+(() => {
+  const lines = ['NETLOAD', 'jPipeCalc  배관 계통을 선택하세요', '엘보 128개, 티 46개, 배관 1,284 m 집계 → Excel 저장'];
+  const el = document.getElementById('cmdText');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) { el.innerHTML = '<b>명령:</b> ' + lines[1]; }
+  else {
+    let li = 0, ci = 0;
+    const tick = () => {
+      const s = lines[li];
+      el.innerHTML = '<b>명령:</b> ' + s.slice(0, ci);
+      if (ci++ < s.length) return setTimeout(tick, 55);
+      setTimeout(() => { li = (li + 1) % lines.length; ci = 0; tick(); }, 2200);
+    };
+    setTimeout(tick, 1400);
+  }
+  const sheet = document.getElementById('sheet'), xh = document.getElementById('xhair'), co = document.getElementById('coords');
+  const [h, v] = xh.querySelectorAll('i'), box = xh.querySelector('.box');
+  sheet.addEventListener('mousemove', e => {
+    const r = sheet.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    h.style.top = y + 'px'; v.style.left = x + 'px'; box.style.left = x + 'px'; box.style.top = y + 'px';
+    co.textContent = `X ${(x * 25).toFixed(2)}  Y ${((r.height - y) * 25).toFixed(2)}`;
+  });
+})();
+
+/* ---------- simulator ---------- */
+(() => {
+  const $ = id => document.getElementById(id);
+  const ids = ['n', 'nx', 'ny', 'L', 'H', 't'];
+  const fmt = { n: v => v + '층', nx: v => v + '칸', ny: v => v + '칸', L: v => (+v).toFixed(1) + ' m', H: v => (+v).toFixed(1) + ' m', t: v => v + ' mm' };
+  const COL = { col: '#C42F3A', beam: '#0B8796', slab: '#E2B33A' };
+  const NAME = { col: '기둥', beam: '보', slab: '슬래브' };
+  let view = 'iso', focus = null;
+  const svg = $('model'), NS = 'http://www.w3.org/2000/svg';
+
+  function calc(p) {
+    const cols = (p.nx + 1) * (p.ny + 1), beams = p.nx * (p.ny + 1) + p.ny * (p.nx + 1);
+    const ts = p.t / 1000, area = p.nx * p.L * p.ny * p.L;
+    const c = { col: 0.36 * p.H * cols * p.n, beam: 0.4 * (0.7 - ts) * p.L * beams * p.n, slab: area * ts * p.n };
+    const f = { col: 4 * 0.6 * p.H * cols * p.n, beam: (0.4 + 2 * (0.7 - ts)) * p.L * beams * p.n, slab: area * p.n };
+    const r = { col: c.col * 0.18, beam: c.beam * 0.15, slab: c.slab * 0.09 };
+    return { c, f, r, cols, beams };
+  }
+
+  function el(tag, a) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); return e; }
+
+  function draw(p) {
+    svg.innerHTML = '';
+    const W = svg.clientWidth || 600, Hh = svg.clientHeight || 420;
+    const dim = (k) => focus && focus !== k ? 0.12 : 1;
+    const segs = [];   // {k, pts:[[x,y,z]...], poly}
+    const X = p.nx * p.L, Y = p.ny * p.L, Z = p.n * p.H;
+    if (view === 'plan') {
+      const s = Math.min((W - 90) / X, (Hh - 90) / Y), ox = (W - X * s) / 2, oy = (Hh - Y * s) / 2;
+      const g = el('g', {});
+      g.appendChild(el('rect', { x: ox, y: oy, width: X * s, height: Y * s, fill: COL.slab, 'fill-opacity': .12 * dim('slab'), stroke: COL.slab, 'stroke-opacity': dim('slab') }));
+      for (let i = 0; i <= p.nx; i++) g.appendChild(el('line', { x1: ox + i * p.L * s, y1: oy - 22, x2: ox + i * p.L * s, y2: oy + Y * s + 22, stroke: '#C42F3A', 'stroke-dasharray': '8 3 2 3', 'stroke-width': .7, opacity: .5 }));
+      for (let j = 0; j <= p.ny; j++) g.appendChild(el('line', { x1: ox - 22, y1: oy + j * p.L * s, x2: ox + X * s + 22, y2: oy + j * p.L * s, stroke: '#C42F3A', 'stroke-dasharray': '8 3 2 3', 'stroke-width': .7, opacity: .5 }));
+      for (let i = 0; i <= p.nx; i++) for (let j = 0; j <= p.ny; j++) {
+        if (i < p.nx) g.appendChild(el('line', { x1: ox + i * p.L * s, y1: oy + j * p.L * s, x2: ox + (i + 1) * p.L * s, y2: oy + j * p.L * s, stroke: COL.beam, 'stroke-width': Math.max(2, .4 * s), opacity: dim('beam') }));
+        if (j < p.ny) g.appendChild(el('line', { x1: ox + i * p.L * s, y1: oy + j * p.L * s, x2: ox + i * p.L * s, y2: oy + (j + 1) * p.L * s, stroke: COL.beam, 'stroke-width': Math.max(2, .4 * s), opacity: dim('beam') }));
+      }
+      const cs = Math.max(6, .6 * s);
+      for (let i = 0; i <= p.nx; i++) for (let j = 0; j <= p.ny; j++) g.appendChild(el('rect', { x: ox + i * p.L * s - cs / 2, y: oy + j * p.L * s - cs / 2, width: cs, height: cs, fill: COL.col, opacity: dim('col') }));
+      const t = el('text', { x: ox + X * s / 2, y: oy + Y * s + 40, fill: '#9FB0B8', 'font-family': 'IBM Plex Mono', 'font-size': 12, 'text-anchor': 'middle' });
+      t.textContent = `${(X * 1000).toLocaleString()} × ${(Y * 1000).toLocaleString()}`;
+      g.appendChild(t); svg.appendChild(g);
+      return;
+    }
+    // isometric
+    const cx = Math.cos(Math.PI / 6), sy = Math.sin(Math.PI / 6);
+    const pr = (x, y, z) => [(x - y) * cx, (x + y) * sy - z];
+    const corners = [[0, 0, 0], [X, 0, 0], [0, Y, 0], [X, Y, 0], [0, 0, Z], [X, Y, Z], [X, 0, Z], [0, Y, Z]].map(q => pr(...q));
+    const minx = Math.min(...corners.map(c => c[0])), maxx = Math.max(...corners.map(c => c[0]));
+    const miny = Math.min(...corners.map(c => c[1])), maxy = Math.max(...corners.map(c => c[1]));
+    const s = Math.min((W - 60) / (maxx - minx), (Hh - 60) / (maxy - miny));
+    const P = (x, y, z) => { const [a, b] = pr(x, y, z); return [(a - minx) * s + (W - (maxx - minx) * s) / 2, (b - miny) * s + (Hh - (maxy - miny) * s) / 2]; };
+    const pts = arr => arr.map(q => P(...q).join(',')).join(' ');
+    const g = el('g', {});
+    for (let k = 1; k <= p.n; k++) {
+      const z = k * p.H;
+      g.appendChild(el('polygon', { points: pts([[0, 0, z], [X, 0, z], [X, Y, z], [0, Y, z]]), fill: COL.slab, 'fill-opacity': (k === p.n ? .22 : .07) * dim('slab'), stroke: COL.slab, 'stroke-width': .8, 'stroke-opacity': .7 * dim('slab') }));
+      for (let i = 0; i <= p.nx; i++) for (let j = 0; j <= p.ny; j++) {
+        if (i < p.nx) { const [a, b] = P(i * p.L, j * p.L, z), [c, d] = P((i + 1) * p.L, j * p.L, z); g.appendChild(el('line', { x1: a, y1: b, x2: c, y2: d, stroke: COL.beam, 'stroke-width': 1.6, opacity: dim('beam') })); }
+        if (j < p.ny) { const [a, b] = P(i * p.L, j * p.L, z), [c, d] = P(i * p.L, (j + 1) * p.L, z); g.appendChild(el('line', { x1: a, y1: b, x2: c, y2: d, stroke: COL.beam, 'stroke-width': 1.6, opacity: dim('beam') })); }
+        const [a, b] = P(i * p.L, j * p.L, z - p.H), [c, d] = P(i * p.L, j * p.L, z);
+        g.appendChild(el('line', { x1: a, y1: b, x2: c, y2: d, stroke: COL.col, 'stroke-width': 2.4, opacity: dim('col') }));
+      }
+    }
+    g.appendChild(el('polygon', { points: pts([[0, 0, 0], [X, 0, 0], [X, Y, 0], [0, Y, 0]]), fill: 'none', stroke: '#5B6D78', 'stroke-dasharray': '4 3' }));
+    svg.appendChild(g);
+  }
+
+  function update() {
+    const p = {}; ids.forEach(k => { p[k] = +$(k).value; $('o-' + k).textContent = fmt[k]($(k).value); });
+    const q = calc(p), n1 = v => v.toLocaleString('ko-KR', { maximumFractionDigits: 1 }), n2 = v => v.toLocaleString('ko-KR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    $('qbody').innerHTML = ['col', 'beam', 'slab'].map(k =>
+      `<tr tabindex="0" data-k="${k}"><td><span class="dot" style="background:${COL[k]}"></span>${NAME[k]}</td><td>${n1(q.c[k])}</td><td>${n1(q.f[k])}</td><td>${n2(q.r[k])}</td></tr>`).join('');
+    const sum = o => o.col + o.beam + o.slab;
+    $('qfoot').innerHTML = `<td>합계</td><td>${n1(sum(q.c))}</td><td>${n1(sum(q.f))}</td><td>${n2(sum(q.r))}</td>`;
+    $('qbody').querySelectorAll('tr').forEach(tr => {
+      const on = () => { focus = tr.dataset.k; draw(p); }, off = () => { focus = view === 'qty' ? 'slab' : null; draw(p); };
+      tr.addEventListener('mouseenter', on); tr.addEventListener('focus', on);
+      tr.addEventListener('mouseleave', off); tr.addEventListener('blur', off);
+    });
+    draw(p);
+  }
+  ids.forEach(k => $(k).addEventListener('input', update));
+  document.querySelectorAll('.flow button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.flow button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    view = b.dataset.view === 'plan' ? 'plan' : 'iso';
+    focus = b.dataset.view === 'qty' ? 'slab' : null;
+    $('vpLabel').textContent = view === 'plan' ? '평면 뷰 · 기준층' : (focus ? '3D 뷰 · 슬래브 물량 강조' : '3D 뷰 · 남동 등각');
+    update();
+  }));
+  addEventListener('resize', update);
+  update();
+})();
+
+/* ---------- projects ---------- */
+const PROJECTS = [
+  { plat: 'BricsCAD', name: 'Jpipe 설비 적산', ver: 'BricsCAD V21 · .NET 4.8',
+    desc: '2D 도면의 선을 배관·덕트·소방 객체로 인식해 부속과 길이를 자동 산출',
+    feat: ['엘보·티·소켓 자동 추출 (<code>ExtractElbowsFromPipes</code>, <code>ExtractSocketAll</code>)', '치수 가이드 기반 구경 자동 전파', '색상·레이어·XData로 계통 선택 (<code>CS</code>, <code>CSS</code>, <code>CSM</code>)', '적산 폼 <code>jPipeCalc</code>: 배관·엘보·티·기구 4개 탭, Excel 출력', '소방 배관 <code>FirePipeCalc</code>, 덕트 적산 별도 지원', 'Revit용 DWG 패밀리 내보내기 (<code>PipeRevit</code>)'],
+    meta: '<p>설비 도면 적산을 위한 대표 프로젝트입니다. 수작업으로 세던 부속 수량과 배관 길이를 계통 단위로 자동 집계합니다.</p><p>Inno Setup 설치본 · 기기 등록형 라이선스</p>' },
+  { plat: 'AutoCAD', name: 'JArchitecture', ver: 'AutoCAD 2025 · .NET 8',
+    desc: '건축·공조 설계용 플러그인: 실 면적 집계, 배관·덕트 관경 결정, 기구 배치',
+    feat: ['실·면적·장비 집계 폼 <code>RoomAA</code>, 경계 추적', '급수·FCU 배관 Tree 관경 결정', 'DuctTree 덕트 외곽선 생성과 사이즈 산정', '<code>Insert_Damper</code>, <code>Insert_UpDn</code>, 디퓨저 자동 배치', '<code>Duct_tag</code>: 지시선과 a×b 사이즈 자동 표기', '블록 라이브러리와 폴리라인 뷰 관리'],
+    meta: '<p>2025년부터 400회 이상 커밋하며 기능 단위로 확장 중입니다. AutoCAD 덕트를 Revit 모델로 넘기는 연동을 개발하고 있습니다.</p><p>Inno Setup 설치본 · 날짜별 빌드 자동 생성</p>' },
+  { plat: 'Revit', name: 'JRevit MEP 모델링', ver: 'Revit 2023 ~ 2026',
+    desc: '배관·덕트·소방·전기 BIM 모델링을 명령어로 자동화하는 Revit 애드인 제품군',
+    feat: ['덕트·플렉시블 덕트·분기 피팅·디퓨저·댐퍼 생성', '배관 피팅, 역티, 청소구, 위생기구 배관', '스프링클러, 전선, 케이블 트레이, 전선관', 'DWG의 호(Arc)를 엘보로 변환하는 덕트 생성', 'SplitButton 리본 UI', '버전별 빌드: 2023·2024(.NET 4.8) → 2026(.NET 8)'],
+    meta: '<p>Revit 버전이 바뀔 때마다 API 변경에 맞춰 유지하고 있습니다. 2026 버전은 .NET 8 SDK 프로젝트로 이전했고, DWG 읽기는 ACadSharp 라이브러리를 활용합니다.</p><p>Inno Setup 설치본 · 기기 등록형 라이선스</p>' },
+  { plat: 'Revit', name: 'Revit MCP 연동', ver: 'Revit 2020 ~ 2026',
+    desc: 'AI(Claude)가 MCP 프로토콜로 Revit 모델을 조회·조작하도록 연결',
+    feat: ['Revit 내부 TCP 리스너 플러그인', '명령 세트 기반 모델 조회·생성', '자재 물량 산출 도구 <code>get_material_quantities</code>', '통합 테스트 구성'],
+    meta: '<p>공개 오픈소스(mcp-servers-for-revit)를 기반으로 실무 명령을 확장하고 있습니다. 모델 데이터를 AI가 직접 읽어 물량 질의에 답하도록 하는 실험입니다.</p>' },
+  { plat: 'AutoCAD', name: 'CAD Add-in Manager', ver: 'AutoCAD 2025 · BricsCAD',
+    desc: 'CAD를 다시 켜지 않고 애드인 DLL을 재로드해 디버깅하는 개발 도구',
+    feat: ['수동·자동(Faceless) 로드', 'F5 재로드', 'Debug·Trace 출력 확인', 'BricsCAD 포팅'],
+    meta: '<p>오픈소스 CadAddInManager(MIT)를 BricsCAD로 포팅하고 확장했습니다. 애드인 개발 속도를 크게 높여 주는 사내 도구로 씁니다.</p><p>AutoCAD·BricsCAD용 설치본 각각 제공</p>' },
+  { plat: 'Tool', name: '적산 산출서 변환기', ver: '.NET 9 · EPPlus',
+    desc: '적산 산출서를 목록별 산출서 양식으로 자동 변환하는 Excel 도구',
+    feat: ['산출서 시트 읽기와 항목 재배치', '10열 목록별 산출서 양식 생성', 'EPPlus 기반 Excel 직접 출력'],
+    meta: '<p>적산 결과를 제출 양식에 맞추는 반복 편집 작업을 없앴습니다.</p>' },
+  { plat: 'Tool', name: 'RTS 냉방부하 계산기', ver: '.NET 8 · WinForms',
+    desc: 'ASHRAE RTS 방식으로 다수 실의 냉방부하를 계산하는 설계 도구',
+    feat: ['ASHRAE Radiant Time Series 계산', '여러 실(다존) 동시 계산', 'SI/IP 단위 전환', '프로젝트 파일 저장·불러오기', '자동 테스트 103개'],
+    meta: '<p>공조 설계의 부하 계산 단계를 담당합니다. JArchitecture의 덕트·배관 설계 흐름과 이어집니다.</p>' },
+  { plat: 'AutoCAD', name: 'DWG Manager', ver: 'AutoCAD · Google Drive',
+    desc: 'AutoCAD에서 도면을 등록하고 필요한 도면을 다시 찾는 도면 관리 프로그램',
+    feat: ['AutoCAD 안에서 도면 등록', '도면 검색과 불러오기', 'Google Drive 연결'],
+    meta: '<p><a href="dwg-manager/">DWG Manager 소개 페이지 보기</a></p>' }
+];
+(() => {
+  const list = document.getElementById('plist');
+  const DOT = { AutoCAD: '#C42F3A', BricsCAD: '#9B3E8C', Revit: '#0B8796', Tool: '#3E8E4F' };
+  list.innerHTML = PROJECTS.map(p => `
+    <details class="proj" data-plat="${p.plat}">
+      <summary>
+        <span class="plat"><span class="sw" style="background:${DOT[p.plat]}"></span>${p.plat}</span>
+        <span class="ptitle"><b>${p.name}</b><span>${p.desc}</span></span>
+        <span class="pver">${p.ver}</span><span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="pbody"><ul>${p.feat.map(f => `<li>${f}</li>`).join('')}</ul><div class="meta">${p.meta}</div></div>
+    </details>`).join('');
+  document.querySelectorAll('.filter button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.filter button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    list.querySelectorAll('.proj').forEach(d => d.hidden = b.dataset.f !== 'all' && d.dataset.plat !== b.dataset.f);
+  }));
+})();
+</script>
 </body>
 </html>
